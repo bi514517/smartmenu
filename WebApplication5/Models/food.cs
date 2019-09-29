@@ -9,14 +9,16 @@ namespace WebApplication5.Models
     {
         public string foodId, foodName , image, description;
         public int price;
+        public foodType foodType;
 
-        public food(string foodId, string foodName, int price, string image, string description)
+        public food(string foodId, string foodName, int price, string image, string description, foodType foodType)
         {
             this.foodId = foodId;
             this.foodName = foodName;
             this.price = price;
             this.image = image;
             this.description = description;
+            this.foodType = foodType;
         }
 
     }

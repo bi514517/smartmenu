@@ -30,8 +30,26 @@ namespace WebApplication5.Controllers
         public IActionResult Index()
         {
            
+            ViewBag.topFoods = getTopFood();
+            ViewBag.foods = getFoods();
+            ViewBag.foodTypes = getFoodTypes();
+       
+            return PartialView("Views/luigis/index.cshtml");
+        }
+
+        ArrayList getTopFood()
+        {
+            string value = "";
+            if (!string.IsNullOrEmpty(Request.Query["search"]))
+            {
+                value = Request.Query["search"].ToString();
+            }
+
             cnn.Open();
-            String sql = "Select * from Food";
+            string sql = "Select Food.Id,Food.FoodName,Food.Price," +
+               "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName " +
+               "from Food left join FoodType on Food.FoodTypeId = FoodType.Id " +
+               "where Food.FoodName like '%"+ value + "%'";
 
             command = new SqlCommand(sql, cnn);
 
@@ -44,13 +62,64 @@ namespace WebApplication5.Controllers
                 int price = dataReader.GetInt32(2);
                 string image = dataReader.GetValue(3).ToString();
                 string description = dataReader.GetValue(4).ToString();
-                food food = new food(foodId,foodName,price,image,description);
+                int foodTypeId = dataReader.GetInt32(5);
+                string foodTypeName = dataReader.GetValue(6).ToString();
+                foodType foodType = new foodType(foodTypeId, foodTypeName);
+                food food = new food(foodId, foodName, price, image, description, foodType);
                 foods.Add(food);
             }
-            ViewBag.foods = foods; 
             cnn.Close();
-            return PartialView("Views/luigis/index.cshtml");
+            return foods;
         }
+
+        ArrayList getFoods()
+        {
+            cnn.Open();
+            string sql = "Select Food.Id,Food.FoodName,Food.Price," +
+                "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName " +
+                "from Food left join FoodType on Food.FoodTypeId = FoodType.Id";
+
+            command = new SqlCommand(sql, cnn);
+
+            dataReader = command.ExecuteReader();
+            ArrayList foods = new ArrayList();
+            while (dataReader.Read())
+            {
+                string foodId = dataReader.GetValue(0).ToString();
+                string foodName = dataReader.GetValue(1).ToString();
+                int price = dataReader.GetInt32(2);
+                string image = dataReader.GetValue(3).ToString();
+                string description = dataReader.GetValue(4).ToString();
+                int foodTypeId = dataReader.GetInt32(5);
+                string foodTypeName = dataReader.GetValue(6).ToString();
+                foodType foodType = new foodType(foodTypeId, foodTypeName);
+                food food = new food(foodId, foodName, price, image, description, foodType);
+                foods.Add(food);
+            }
+            cnn.Close();
+            return foods;
+        }
+
+        ArrayList getFoodTypes()
+        {
+            cnn.Open();
+            string sql = "Select foodType.Id,foodType.TypeName from foodType";
+
+            command = new SqlCommand(sql, cnn);
+
+            dataReader = command.ExecuteReader();
+            ArrayList foodTypes = new ArrayList();
+            while (dataReader.Read())
+            {
+                int foodTypeId = dataReader.GetInt32(0);
+                string foodTypeName = dataReader.GetValue(1).ToString();
+                foodType foodType = new foodType(foodTypeId, foodTypeName);
+                foodTypes.Add(foodType);
+            }
+            cnn.Close();
+            return foodTypes;
+        }
+
         [Route("about-us")]
         [HttpGet]
         public IActionResult AboutUs()
@@ -64,8 +133,6 @@ namespace WebApplication5.Controllers
         {
             return PartialView("Views/luigis/03_menu.cshtml");
         }
-
-
 
         [Route("blog")]
         [HttpGet]
