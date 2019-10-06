@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using WebApplication5.Models;
 
 namespace WebApplication5.Controllers
@@ -14,6 +16,16 @@ namespace WebApplication5.Controllers
     [ApiController]
     public class HomeController : Controller
     {
+        //location
+        string weatherAPIUrl = "https://api.openweathermap.org/data/2.5/weather";
+        string waetherAPIKey = "6448df283427548ea46ab0a6698d6218";
+        private void addParams( String key, String value)
+        {
+            if (weatherAPIUrl.IndexOf("?") == -1)
+                weatherAPIUrl+=  "?" + key + "=" + value;
+            weatherAPIUrl+=  "&" + key + "=" + value;
+        }
+        //
         SqlCommand command;
         SqlDataReader dataReader;
         string connetionString;
@@ -21,23 +33,20 @@ namespace WebApplication5.Controllers
         public HomeController()
         {
             connetionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=smartmenu;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-
             cnn = new SqlConnection(connetionString);
-
-
         }
         [HttpGet]
-        public IActionResult Index()
+        public async Task<ActionResult> Index()
         {
-           
-            ViewBag.topFoods = getTopFood();
+            weather weather = await GetWeatherAsync();
+            ViewBag.weather = weather;
+            ViewBag.topFoods = getRcmdFood(weather.id);
             ViewBag.foods = getFoods();
             ViewBag.foodTypes = getFoodTypes();
-       
             return PartialView("Views/luigis/index.cshtml");
         }
 
-        ArrayList getTopFood()
+        ArrayList getRcmdFood(int weatherId)
         {
             string value = "";
             if (!string.IsNullOrEmpty(Request.Query["search"]))
@@ -48,8 +57,11 @@ namespace WebApplication5.Controllers
             cnn.Open();
             string sql = "Select Food.Id,Food.FoodName,Food.Price," +
                "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName " +
-               "from Food left join FoodType on Food.FoodTypeId = FoodType.Id " +
-               "where Food.FoodName like '%"+ value + "%'";
+               "from Food " +
+               "left join FoodType on Food.FoodTypeId = FoodType.Id " +
+               "left join food_weather on Food.Id = food_weather.foodId " +
+               "where Food.FoodName like '%" + value + "%' " +
+               "and food_weather.weatherId = "+ weatherId;
 
             command = new SqlCommand(sql, cnn);
 
@@ -98,6 +110,36 @@ namespace WebApplication5.Controllers
             }
             cnn.Close();
             return foods;
+        }
+
+        async Task<weather> GetWeatherAsync()
+        {
+            addParams("lat", "16.0608215");
+            addParams("lon", "108.1941091");
+            addParams("appid", waetherAPIKey);
+            addParams("lang", "vi");
+    
+            weather weather=new weather();
+            using (HttpClient clients = new HttpClient())
+            {
+                clients.BaseAddress = new Uri(weatherAPIUrl);
+                clients.DefaultRequestHeaders.Accept.Clear();
+                clients.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+                HttpResponseMessage response = await clients.GetAsync(weatherAPIUrl);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadAsStringAsync();
+                    JObject json = JObject.Parse(data);
+                    int id = Int32.Parse((string)json["weather"][0]["id"]);
+                    string describe = (string)json["weather"][0]["description"],
+                        icon = (string)json["weather"][0]["icon"];
+                    float temperature = float.Parse((string)json["main"]["temp"]),
+                        humidity = float.Parse((string)json["main"]["humidity"]);
+                    weather = new weather(id,describe, icon, temperature, humidity);
+                }
+            }
+            return weather;
         }
 
         ArrayList getFoodTypes()
