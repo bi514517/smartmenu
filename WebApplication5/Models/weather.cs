@@ -20,7 +20,7 @@ namespace WebApplication5.Models
             this.id = id;
             this.describe = describe;
             this.icon = icon;
-            this.temperature = temperature;
+            this.temperature = temperature -273;
             this.humidity = humidity;
         }
     }

@@ -12,7 +12,7 @@
         padding: 5px 0;
         /* Position the tooltip */
         position: absolute;
-        z-index: 1;
+        z-index: 10000000;
         top: -5px;
         left: 105%;
         text-align:left;
@@ -49,17 +49,26 @@
         <div class="row">
             @foreach (var food in ViewBag.topFoods)
             {
-                <div class="col-lg-3 col-md-4  col-sm-6 ">
+            <div class="col-lg-3 col-md-4  col-sm-6 tooltip1">
+                <div class="center-text mb-30">
+                    <div class="ïmg-200x mlr-auto pos-relative">
+                        <h6 class="ribbon-cont"><div class="ribbon primary"></div><b>OFFER</b></h6>
+                        <img src="@food.image" alt="">
+                    </div>
+                    <h5 class="mt-20">@food.foodName</h5>
+                    <h4 class="mt-5"><b>$ @food.price</b></h4>
+                    <h6 class="mt-20"><a href="#" class="btn-brdr-primary plr-25"><b>Order Now</b></a></h6>
+                </div><!--text-center-->
+                <div class="tooltiptext1">
                     <div class="center-text mb-30">
-                        <div class="ïmg-200x mlr-auto pos-relative">
-                            <h6 class="ribbon-cont"><div class="ribbon primary"></div><b>OFFER</b></h6>
-                            <img src="@food.image" alt="">
-                        </div>
-                        <h5 class="mt-20">@food.foodName</h5>
-                        <h4 class="mt-5"><b>$ @food.price</b></h4>
-                        <h6 class="mt-20"><a href="#" class="btn-brdr-primary plr-25"><b>Order Now</b></a></h6>
+                        <div class="s-left"><img class="br-3" src="@food.image" alt="Menu Image"></div><!--s-left-->
+                        <div class="s-right">
+                            <h5 class="mb-10"><b>@food.foodName</b></h5>
+                            <p class="pr-70">@food.description</p>
+                        </div><!--s-right-->
                     </div><!--text-center-->
-                </div><!-- col-md-3 -->
+                </div>
+            </div><!-- col-md-3 -->
             }
         </div><!-- row -->
 
