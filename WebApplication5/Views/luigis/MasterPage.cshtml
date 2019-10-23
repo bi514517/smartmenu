@@ -16,26 +16,41 @@
     <link href="~/common/styles.css" rel="stylesheet">
     <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.4.1.min.js"></script>
     <script>
-        function setCookie(cname, cvalue, exdays) {
-            $.cookie("test", 1, { expires: 10 });
+        function setCookie(cname, cvalue) {
+            var d = new Date();
+            d.setTime(d.getTime() + (10 * 24 * 60 * 60 * 1000));
+            var expires = "expires=" + d.toGMTString();
+            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
         }
 
         function getCookie(cname) {
-            if (checkCookie(cname))
-                return $.cookie(cname);
-            else return null;
+            var name = cname + "=";
+            var decodedCookie = decodeURIComponent(document.cookie);
+            var ca = decodedCookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+
+        function delCookie(cname) {
+            document.cookie = cname + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         }
 
         function checkCookie(cname) {
-            if (!!$.cookie(cname)) {
+            var user = getCookie(cname);
+            if (user != "") {
                 return true;
             } else {
                 return false;
             }
         }
-
-
-
     </script>
 </head>
 <body>
@@ -48,8 +63,8 @@
 
             <a class="menu-nav-icon" data-menu="#main-menu" href="#"><i class="ion-navicon"></i></a>
             <div class="right-area 	d-none d-lg-block d-xl-block">
-                <a>
-                    <i class="fa fa-shopping-cart fa-2x"> Giỏ hàng</i>
+                <a href="../ordered">
+                    <i class="fa fa-shopping-cart fa-2x"></i>
                 </a>
 
             </div><!-- right-area -->
@@ -72,7 +87,7 @@
                 <li><a href="blog">NEWS</a></li>
                 <li><a href="contact">CONTACT</a></li>
                 <li class="d-block d-md-none d-sm-none d-xs-none">
-                    <a>
+                    <a href="../ordered">
                         <i class="fa fa-shopping-cart fa-lg"> Giỏ hàng</i>
                     </a>
                 </li>
@@ -81,9 +96,9 @@
     </header>
 
 
-
-    @RenderBody()
-
+    <div class="master-content" style="padding-top:110px">
+        @RenderBody()
+    </div>
     <footer class="pb-50  pt-70 pos-relative">
         <div class="pos-top triangle-bottom"></div>
         <div class="container-fluid">

@@ -28,6 +28,7 @@
         border-bottom: 1px dotted black;
     }
 </style>
+
 <section class="story-area bg-seller color-white pos-relative">
     <div class="pos-bottom triangle-up"></div>
     <div class="pos-top triangle-bottom"></div>
@@ -57,7 +58,11 @@
                     </div>
                     <h5 class="mt-20">@food.foodName</h5>
                     <h4 class="mt-5"><b>$ @food.price</b></h4>
-                    <h6 class="mt-20"><a href="#" class="btn-brdr-primary plr-25"><b>Order Now</b></a></h6>
+                    <h6 class="mt-20" >
+                        <button class="btn-brdr-primary plr-25" onclick="order();addorder('@food.foodId');">
+                            <b class="order-text" id="@food.foodId" >Order Now</b>
+                        </button>
+                    </h6>
                 </div><!--text-center-->
                 <div class="tooltiptext1">
                     <div class="center-text mb-30">
@@ -103,7 +108,7 @@
                     <div class="sided-90x mb-30 ">
                         <div class="s-left"><img class="br-3" src="@food.image" alt="Menu Image"></div><!--s-left-->
                         <div class="s-right">
-                            <h5 class="mb-10"><b>@food.foodName</b><b class="color-primary float-right">$12.00</b></h5>
+                            <h5 class="mb-10"><b>@food.foodName</b><b class="color-primary float-right">$@food.price</b></h5>
                             <p class="pr-70">@food.description</p>
                         </div><!--s-right-->
                     </div><!-- sided-90x -->
@@ -114,3 +119,29 @@
         <h6 class="center-text mt-40 mt-sm-20 mb-30"><a href="#" class="btn-primaryc plr-25"><b>SEE TODAYS MENU</b></a></h6>
     </div><!-- container -->
 </section>
+<script>
+    function addorder(id) {
+        var e = document.getElementById(id);
+        var bool = checkCookie(e.id);
+        if (bool) {
+            delCookie(e.id);
+            e.innerHTML = "Order Now";
+        } else {
+            setCookie(e.id, e.id);
+            e.innerHTML = "ordered";
+        }
+    }
+
+    function order() {
+        var e = document.getElementsByClassName("order-text");
+        for (let i = 0; i < e.length; i++) {
+            var bool = checkCookie(e[i].id);
+            if (bool) {
+                e[i].innerHTML = "Ordered";
+            } else {
+                e[i].innerHTML = "Order Now";
+            }
+        }
+    }
+    order();
+</script>

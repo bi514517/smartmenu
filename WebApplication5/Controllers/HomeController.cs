@@ -59,12 +59,12 @@ namespace WebApplication5.Controllers
                "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName " +
                "from Food " +
                "left join FoodType on Food.FoodTypeId = FoodType.Id " +
-               "left join food_weather on Food.Id = food_weather.foodId " +
-               "where Food.FoodName like '%" + value + "%' " +
-               "and food_weather.weatherId = "+ weatherId;
-
+               "left join food_weather on Food.Id = food_weather.foodId ";
+            if(value.Length > 0)
+                sql+= "where Food.FoodName like '%" + value + "%' ";
+            else
+                sql += "where food_weather.weatherId = " + weatherId;
             command = new SqlCommand(sql, cnn);
-
             dataReader = command.ExecuteReader();
             ArrayList foods = new ArrayList();
             while (dataReader.Read())
@@ -197,6 +197,50 @@ namespace WebApplication5.Controllers
              return PartialView("Views/luigis/06_elements.cshtml");
         }
 
+        [Route("food-create")]
+        [HttpGet]
+        public IActionResult createFood()
+        {
+            return PartialView("Views/luigis/CreateFood.cshtml");
+        }
+
+        [Route("ordered")]
+        [HttpGet]
+        public IActionResult ordered()
+        {
+            cnn.Open();
+            string sql = "Select Food.Id,Food.FoodName,Food.Price," +
+                "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName " +
+                "from Food left join FoodType on Food.FoodTypeId = FoodType.Id " +
+                "WHERE Food.Id IN (";
+            for (int i = 0; i < 1000;i++)
+            {
+                if (Request.Cookies[""+i] != null)
+                {
+                    sql += "'"+i+"',";
+                }
+            }
+            sql = sql.Substring(0, sql.Length-1) + ")";
+            command = new SqlCommand(sql, cnn);
+            dataReader = command.ExecuteReader();
+            ArrayList foods = new ArrayList();
+            while (dataReader.Read())
+            {
+                string foodId = dataReader.GetValue(0).ToString();
+                string foodName = dataReader.GetValue(1).ToString();
+                int price = dataReader.GetInt32(2);
+                string image = dataReader.GetValue(3).ToString();
+                string description = dataReader.GetValue(4).ToString();
+                int foodTypeId = dataReader.GetInt32(5);
+                string foodTypeName = dataReader.GetValue(6).ToString();
+                foodType foodType = new foodType(foodTypeId, foodTypeName);
+                food food = new food(foodId, foodName, price, image, description, foodType);
+                foods.Add(food);
+            }
+            cnn.Close();
+            ViewBag.foods = foods;
+            return PartialView("Views/luigis/order.cshtml");
+        }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
