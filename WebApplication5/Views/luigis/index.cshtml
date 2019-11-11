@@ -59,7 +59,7 @@
                     <h5 class="mt-20">@food.foodName</h5>
                     <h4 class="mt-5"><b>$ @food.price</b></h4>
                     <h6 class="mt-20" >
-                        <button class="btn-brdr-primary plr-25" onclick="order();addorder('@food.foodId');">
+                        <button class="btn-brdr-primary plr-25"perfect-scrollbar onclick="order();addorder('@food.foodId');">
                             <b class="order-text" id="@food.foodId" >Order Now</b>
                         </button>
                     </h6>
@@ -69,7 +69,7 @@
                         <div class="s-left"><img class="br-3" src="@food.image" alt="Menu Image"></div><!--s-left-->
                         <div class="s-right">
                             <h5 class="mb-10"><b>@food.foodName</b></h5>
-                            <p class="pr-70">@food.description</p>
+                            <p class="pr-70">@Html.Raw(food.description)</p>
                         </div><!--s-right-->
                     </div><!--text-center-->
                 </div>
@@ -109,7 +109,7 @@
                         <div class="s-left"><img class="br-3" src="@food.image" alt="Menu Image"></div><!--s-left-->
                         <div class="s-right">
                             <h5 class="mb-10"><b>@food.foodName</b><b class="color-primary float-right">$@food.price</b></h5>
-                            <p class="pr-70">@food.description</p>
+                            <p class="pr-70">@Html.Raw(food.description)</p>
                         </div><!--s-right-->
                     </div><!-- sided-90x -->
                 </div><!-- food-menu -->

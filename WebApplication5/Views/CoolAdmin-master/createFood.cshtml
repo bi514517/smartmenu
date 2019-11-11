@@ -1,0 +1,75 @@
+﻿
+@{
+    ViewData["Title"] = "createFood";
+    Layout = "~/Views/CoolAdmin-master/masterPage.cshtml";
+}
+<script src="~/ckeditor/ckeditor.js"></script>
+<div class="card">
+    <div class="card-header">
+        <strong>New food</strong>
+        <small> Form</small>
+    </div>
+    <div class="card-body card-block">
+        <form method="post" action="">
+            <div class="form-group">
+                <label for="company" class=" form-control-label">Name</label>
+                <input type="text" id="company" value="@if (@ViewBag.food != null) {@ViewBag.food.foodName}" name="FoodName" placeholder="Enter your company name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="vat" class=" form-control-label">price</label>
+                <input type="number" id="vat" value="@if (@ViewBag.food != null) {@ViewBag.food.price}" name="Price" placeholder="" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="street" class=" form-control-label">image</label>
+                <input type="text" id="street" value="@if (@ViewBag.food != null) {@ViewBag.food.image}" name="Image" placeholder="Enter street name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="city" class=" form-control-label">description</label>
+                <textarea type="text" id="editor1" name="Description" placeholder="Enter your city" class="form-control">
+                @if (@ViewBag.food != null)
+                {
+                    @ViewBag.food.description
+                }
+                </textarea>
+                <script>
+                    // Replace the <textarea id="editor1"> with a CKEditor
+                    // instance, using default configuration.
+                    CKEDITOR.replace('editor1');
+                </script>
+            </div>
+            <div class="row form-group">
+                <div class="col col-md-3">
+                    <label for="selectSm" class=" form-control-label">food type</label>
+                </div>
+                <div class="col-12 col-md-9">
+                    <select name="FoodTypeId" id="SelectLm" class="form-control-sm form-control">
+                        @foreach (var foodType in ViewBag.foodTypes)
+                        {
+                            @if (ViewBag.food !=null && @foodType.id == ViewBag.food.foodType.id)
+                            {
+                                <option selected value="@foodType.id">@foodType.name</option>
+                            }
+                            else
+                            {
+                                <option value="@foodType.id">@foodType.name</option>
+                            }
+
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fa fa-dot-circle-o"></i> Submit
+            </button>
+            <button type="reset" class="btn btn-danger btn-sm" onclick="back();"> 
+                <i class="fa fa-ban"></i> Reset
+            </button>
+        </form>
+    </div>
+</div>
+<script>
+    function back() {
+        window.location.href = "/admin/food-managerment";
+    }
+</script>

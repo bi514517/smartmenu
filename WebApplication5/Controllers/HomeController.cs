@@ -63,7 +63,7 @@ namespace WebApplication5.Controllers
             if(value.Length > 0)
                 sql+= "where Food.FoodName like '%" + value + "%' ";
             else
-                sql += "where food_weather.weatherId = " + weatherId;
+                sql += "where food_weather.weatherId = " + weatherId;   
             command = new SqlCommand(sql, cnn);
             dataReader = command.ExecuteReader();
             ArrayList foods = new ArrayList();
@@ -211,16 +211,21 @@ namespace WebApplication5.Controllers
             cnn.Open();
             string sql = "Select Food.Id,Food.FoodName,Food.Price," +
                 "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName " +
-                "from Food left join FoodType on Food.FoodTypeId = FoodType.Id " +
-                "WHERE Food.Id IN (";
-            for (int i = 0; i < 1000;i++)
+                "from Food left join FoodType on Food.FoodTypeId = FoodType.Id ";
+            String tam = "";
+            for (int i = 0; i < 1000; i++)
             {
-                if (Request.Cookies[""+i] != null)
+                if (Request.Cookies["" + i] != null)
                 {
-                    sql += "'"+i+"',";
+                    tam += "'" + i + "',";
                 }
             }
-            sql = sql.Substring(0, sql.Length-1) + ")";
+            if (tam.Length > 0)
+            {
+                sql += "WHERE Food.Id IN (" + tam;
+                sql = sql.Substring(0, sql.Length - 1) + ")";
+            }
+
             command = new SqlCommand(sql, cnn);
             dataReader = command.ExecuteReader();
             ArrayList foods = new ArrayList();
@@ -240,6 +245,36 @@ namespace WebApplication5.Controllers
             cnn.Close();
             ViewBag.foods = foods;
             return PartialView("Views/luigis/order.cshtml");
+        }
+
+        [Route("ordered")]
+        [HttpPost]
+        public String postOrdered()
+        {
+            var ip = Request.HttpContext.Connection.RemoteIpAddress;
+            String sql = "INSERT INTO [order] (tableIp, foodId,amount) VALUES ";
+            int count = 0;
+            foreach(String key in Request.Form.Keys)
+            {
+                count++;
+                sql += "('"+ ip + "','"+key+"','"+Request.Form[key]+"')";
+            }
+            if (count > 0)
+            {
+                foreach (String key in Request.Form.Keys)
+                {
+                    Response.Cookies.Delete(key);
+                }
+                string sql1 = "DELETE FROM [order] WHERE tableIp='" + ip + "';";
+                Database.cnn.Open();
+                Database.excuteQuery(sql1);
+                Database.cnn.Close();
+                Database.cnn.Open();
+                Database.excuteQuery(sql);
+                Database.cnn.Close();
+                return "success";
+            }
+            else return "fail";
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

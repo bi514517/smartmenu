@@ -1,0 +1,65 @@
+﻿@{
+    Layout = "~/Views/CoolAdmin-master/masterPage.cshtml";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <!-- DATA TABLE -->
+        <h3 class="title-5 m-b-35">data table</h3>
+        <div class="table-data__tool">
+            <div class="table-data__tool-left">
+            </div>
+            <div class="table-data__tool-right">
+                <button class="au-btn au-btn-icon au-btn--green au-btn--small" onclick="window.location.href = './food-create';">
+                    <i class="zmdi zmdi-plus"></i>add item
+                </button>
+            </div>
+        </div>
+        <div class="table-responsive table-responsive-data2">
+            <table class="table table-data2">
+                <thead>
+                    <tr>
+                        <th>name</th>
+                        <th>price</th>
+                        <th>description</th>
+                        <th>type</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var food in ViewBag.foods)
+                    {
+                        <tr class="tr-shadow @food.foodId" >
+                            <td onclick="window.location.href = 'food-create?id=@food.foodId' ;">@food.foodName</td>
+                            <td>@food.price</td>
+                            <td class="desc">@Html.Raw(food.description)</td>
+                            <td>@food.foodType.name</td>
+                            <td>
+                                <div class="table-data-feature">
+                                    <button class="item" data-toggle="tooltip" data-placement="top" title="Delete" onclick="delEstate('@food.foodId');">
+                                        <i class="zmdi zmdi-delete"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <!-- END DATA TABLE -->
+    </div>
+</div>
+<script>
+    function delEstate(id) {
+        $.ajax({
+            url: "food-delete?id=" + id,
+            type: "get",
+            dataType: "text",
+            data: {},
+            success: function (result) {
+                alert(result);
+                $('.' + id).remove();
+            }
+        });
+    }
+</script>
