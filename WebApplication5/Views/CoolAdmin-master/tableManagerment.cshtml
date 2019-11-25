@@ -1,37 +1,42 @@
 ﻿
 @{
-    ViewData["Title"] = "orderManagerment";
+    ViewData["Title"] = "tableManagerment";
     Layout = "~/Views/CoolAdmin-master/masterPage.cshtml";
 }
+
 
 <div class="row">
     <div class="col-md-12">
         <!-- DATA TABLE -->
         <h3 class="title-5 m-b-35">data table</h3>
+        <div class="table-data__tool">
+            <div class="table-data__tool-left">
+            </div>
+            <div class="table-data__tool-right">
+                <button class="au-btn au-btn-icon au-btn--green au-btn--small" onclick="edit();">
+                    <i class="zmdi zmdi-plus"></i>Setup for this table
+                </button>
+            </div>
+        </div>
         <div class="table-responsive table-responsive-data2">
             <table class="table table-data2">
                 <thead>
                     <tr>
                         <th>id</th>
                         <th>table</th>
-                        <th>date</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var order in ViewBag.orders)
+                    @foreach (var table in ViewBag.tables)
                     {
-                        <tr class="tr-shadow @order.id">
-                            <td>@order.id</td>
-                            <td>@order.Table.name</td>
-                            <td class="desc">@Html.Raw(order.time)</td>
+                        <tr class="tr-shadow @table.ip">
+                            <td>@table.ip</td>
+                            <td>@table.name</td>
                             <td>
                                 <div class="table-data-feature">
-                                    <button class="item" data-toggle="tooltip" data-placement="top" title="Delete" onclick="del('@order.id');">
+                                    <button class="item" data-toggle="tooltip" data-placement="top" title="Delete" onclick="del('@table.ip');">
                                         <i class="zmdi zmdi-delete"></i>
-                                    </button>
-                                    <button class="item" data-toggle="tooltip" data-placement="top" title="approve" onclick="approve('@order.id');">
-                                        <i class="zmdi zmdi-check"></i>
                                     </button>
                                 </div>
                             </td>
@@ -46,7 +51,7 @@
 <script>
     function del(id) {
         $.ajax({
-            url: "order-delete?id=" + id,
+            url: "table-delete?id=" + id,
             type: "get",
             dataType: "text",
             data: {},
@@ -56,16 +61,20 @@
             }
         });
     }
-    function approve(id) {
-        $.ajax({
-            url: "order-approve?id=" + id,
-            type: "get",
-            dataType: "text",
-            data: {},
-            success: function (result) {
-                alert(result);
-                $('.' + id).remove();
-            }
-        });
+    function edit() {
+        var name = prompt("Please enter your name", "Harry Potter");
+        if (name != null) {
+            $.ajax({
+                url: "table-edit?name=" + name,
+                type: "post",
+                dataType: "text",
+                data: {},
+                success: function (result) {
+                    alert(result);
+                    $('.' + id).remove();
+                }
+            });
+        }
+
     }
 </script>

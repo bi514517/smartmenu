@@ -1,0 +1,23 @@
+﻿<i class="zmdi zmdi-comment-more"></i>
+<span class="quantity">@ViewBag.count</span>
+<div class="mess-dropdown js-dropdown">
+    <div class="mess__title">
+        <p>You have @ViewBag.count news message</p>
+    </div>
+    @foreach (var order in ViewBag.orders)
+    {
+        <div class="mess__item">
+            <div class="image img-cir img-40">
+                <img src="~/images/icon/avatar-06.jpg" alt="Michelle Moreno" />
+            </div>
+            <div class="content">
+                <h6>@order.Table.name</h6>
+                <p>@order.ordered.Count món</p>
+                <span class="time">@order.time</span>
+            </div>
+        </div>
+    }
+    <div class="mess__footer">
+        <a href="~/order-managerment">View all messages</a>
+    </div>
+</div>

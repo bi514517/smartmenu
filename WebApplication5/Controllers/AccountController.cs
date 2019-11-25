@@ -23,9 +23,15 @@ namespace WebApplication5.Controllers
             { 
                 String user = Request.Form["user"];
                 String pass = Request.Form["pass"];
+                String a = Request.Form["remember"];
+                bool remember = false;
+                if (a != null && a.Equals("on"))
+                {
+                    remember = true;
+                }
                 if (checkUserExist(user))
                 {
-                    saveUser(user, pass);
+                    saveUser(remember, user, pass);
                     return Redirect("~/admin/");
                 }
                 else
@@ -44,7 +50,7 @@ namespace WebApplication5.Controllers
                     String pass = Request.Cookies["pass"];
                     if (checkUserExist(user))
                     {
-                        saveUser(user, pass);
+                        saveUser(true,user, pass);
                         return Redirect("~/admin/");
                     }
                     else
@@ -69,7 +75,7 @@ namespace WebApplication5.Controllers
             Database.cnn.Close();
             return tmp;
         }
-        public void saveUser(string username, string password,string fullname = "",Boolean isCreate = false)
+        public void saveUser(Boolean remember,string username, string password,string fullname = "",Boolean isCreate = false)
         {
             if (isCreate)
             {
@@ -111,9 +117,10 @@ namespace WebApplication5.Controllers
                 String user = Request.Form["user"];
                 String pass = Request.Form["pass"];
                 String fullname = Request.Form["fullname"];
+                bool remember = Boolean.Parse(Request.Form["remember"]);
                 if (!checkUserExist(user))
                 {
-                    saveUser(user, pass,fullname,true);
+                    saveUser(remember, user, pass,fullname,true);
                     return Redirect("~/admin/");
                 }
                 else

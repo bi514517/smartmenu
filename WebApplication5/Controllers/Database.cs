@@ -18,5 +18,11 @@ namespace WebApplication5.Controllers
             dataReader = command.ExecuteReader();
             return dataReader;
         }
+        public static int executeScalar(String sql)
+        {
+            command = new SqlCommand(sql, cnn);
+            int id = Convert.ToInt32(command.ExecuteScalar());
+            return id;
+        }
     }
 }
