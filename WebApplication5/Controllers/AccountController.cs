@@ -86,7 +86,6 @@ namespace WebApplication5.Controllers
                 Database.cnn.Close();
             }
             CookieOptions opt = new CookieOptions();
-            opt.MaxAge = DateTime.Now.AddHours(1) - DateTime.Now;
             Response.Cookies.Append("user", username, opt);
             Response.Cookies.Append("pass", password, opt);
         }

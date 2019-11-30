@@ -213,18 +213,21 @@ namespace WebApplication5.Controllers
                 "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName " +
                 "from Food left join FoodType on Food.FoodTypeId = FoodType.Id ";
             String tam = "";
-            for (int i = 0; i < 1000; i++)
+            string[] keys = Request.Cookies.Keys.ToArray();
+            int id;
+            for (int i = 0; i < Request.Cookies.Count; i++)
             {
-                if (Request.Cookies["" + i] != null)
+                if (Request.Cookies[keys[i]] != null && int.TryParse(keys[i], out id))
                 {
-                    tam += "'" + i + "',";
+                    tam += "'" + id + "',";
                 }
             }
             if (tam.Length > 0)
             {
                 sql += "WHERE Food.Id IN (" + tam;
                 sql = sql.Substring(0, sql.Length - 1) + ")";
-            }else
+            }
+            else
             {
                 sql += "WHERE 0 > 1";
             }
