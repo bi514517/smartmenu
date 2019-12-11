@@ -8,6 +8,7 @@ using WebApplication5.Models;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Http;
 using DotNet.Cookies;
+using System.Data;
 
 namespace WebApplication5.Controllers
 {
@@ -69,10 +70,8 @@ namespace WebApplication5.Controllers
         private bool checkUserExist(string username)
         {
             String sql = "SELECT * FROM Users WHERE UserName = '" + username + "'";
-            Database.cnn.Open();
-            SqlDataReader data = Database.excuteQuery(sql);
-            Boolean tmp = data.HasRows;
-            Database.cnn.Close();
+            DataTable data = Database.excuteQuery(sql);
+            Boolean tmp = data.Rows.Count>0;
             return tmp;
         }
         public void saveUser(Boolean remember,string username, string password,string fullname = "",Boolean isCreate = false)
@@ -81,9 +80,7 @@ namespace WebApplication5.Controllers
             {
                 String sql = "INSERT INTO Users (UserName, FullName, Password) " +
                     " VALUES('"+username+"', '"+password+"', '"+fullname+"')";
-                Database.cnn.Open();
                 Database.excuteQuery(sql);
-                Database.cnn.Close();
             }
             CookieOptions opt = new CookieOptions();
             Response.Cookies.Append("user", username, opt);

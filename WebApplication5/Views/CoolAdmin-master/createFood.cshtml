@@ -11,6 +11,13 @@
     </div>
     <div class="card-body card-block">
         <form method="post" action="">
+            @if (@ViewBag.food != null && @ViewBag.food.foodId != null)
+            {
+                <div class="form-group" style="display:none">
+                    <label for="company" class=" form-control-label">Id</label>
+                    <input type="text" id="foodId" value="@ViewBag.food.foodId" name="Id" class="form-control">
+                </div>
+            }
             <div class="form-group">
                 <label for="company" class=" form-control-label">Name</label>
                 <input type="text" id="company" value="@if (@ViewBag.food != null) {@ViewBag.food.foodName}" name="FoodName" placeholder="Enter your company name" class="form-control">
@@ -45,7 +52,7 @@
                     <select name="FoodTypeId" id="SelectLm" class="form-control-sm form-control">
                         @foreach (var foodType in ViewBag.foodTypes)
                         {
-                            @if (ViewBag.food !=null && @foodType.id == ViewBag.food.foodType.id)
+                            @if (ViewBag.food != null && @foodType.id == ViewBag.food.foodType.id)
                             {
                                 <option selected value="@foodType.id">@foodType.name</option>
                             }
@@ -58,11 +65,32 @@
                     </select>
                 </div>
             </div>
+            <div class="row form-group">
+                <div class="col col-md-3">
+                    <label for="selectSm" class=" form-control-label">food size</label>
+                </div>
+                <div class="col-12 col-md-9">
+                    <select name="SizeId" id="SelectLm" class="form-control-sm form-control">
+                        @foreach (var foodSize in ViewBag.foodSizes)
+                        {
+                            @if (ViewBag.food != null && foodSize.id == ViewBag.food.foodSize.id)
+                            {
+                                <option selected value="@foodSize.id">@foodSize.name</option>
+                            }
+                            else
+                            {
+                                <option value="@foodSize.id">@foodSize.name</option>
+                            }
+
+                        }
+                    </select>
+                </div>
+            </div>
 
             <button type="submit" class="btn btn-primary btn-sm">
                 <i class="fa fa-dot-circle-o"></i> Submit
             </button>
-            <button type="reset" class="btn btn-danger btn-sm" onclick="back();"> 
+            <button type="reset" class="btn btn-danger btn-sm" onclick="back();">
                 <i class="fa fa-ban"></i> Reset
             </button>
         </form>

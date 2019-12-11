@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,25 +20,21 @@ namespace WebApplication5.Models
         }
         public user(string username)
         {
-            String sql = "SELECT * FROM Users WHERE UserName = '" + username + "'";
-            Database.cnn.Open();
-            SqlDataReader data = Database.excuteQuery(sql);
-            while (data.Read())
+            String sql = "SELECT UserName,FullName,Password FROM Users WHERE UserName = '" + username + "'";
+            DataTable data = Database.excuteQuery(sql);
+            if (data.Rows.Count > 0)
             {
-                UserName = data.GetValue(0).ToString();
-                FullName = data.GetValue(1).ToString();
-                Password = data.GetValue(1).ToString();
+                UserName = data.Rows[0]["UserName"].ToString();
+                FullName = data.Rows[0]["FullName"].ToString();
+                Password = data.Rows[0]["Password"].ToString();
             }
-            Database.cnn.Close();
         }
         public Boolean islogged()
         {
             String sql = "SELECT * FROM Users WHERE UserName = '" + UserName + "'";
-            Database.cnn.Open();
-            SqlDataReader data = Database.excuteQuery(sql);
-            Boolean tmp = data.HasRows;
-            Database.cnn.Close();
-            return tmp;
+            DataTable data = Database.excuteQuery(sql);
+            Boolean tmp = data.Rows.Count > 0;
+            return true;
         }
     }
 

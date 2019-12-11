@@ -1,0 +1,157 @@
+﻿
+@{
+    ViewData["Title"] = "detail";
+    Layout = "~/Views/luigis/MasterPage.cshtml";
+}
+
+<body>
+
+    <div class="container text-center">
+        <h3>@ViewBag.food.foodName</h3><br>
+        <div class="row">
+            <div class="col-sm-4">
+                <img src="@ViewBag.food.image" class="img-responsive" style="width:100%" alt="Image">
+
+                <div id="rating">
+                    <input type="radio" id="star5" name="rating" value="5" />
+                    <label class="full" for="star5" onclick="rating(5)" title="Awesome - 5 stars"><font size="12">★</font></label>
+
+                    <input type="radio" id="star4" name="rating" value="4" />
+                    <label class="full" for="star4" onclick="rating(4)" title="Pretty good - 4 stars"><font size="12">★</font></label>
+
+                    <input type="radio" id="star3" name="rating" value="3" />
+                    <label class="full" for="star3" onclick="rating(3)" title="Meh - 3 stars"><font size="12">★</font></label>
+
+                    <input type="radio" id="star2" name="rating" value="2" />
+                    <label class="full" for="star2" onclick="rating(2)" title="Kinda bad - 2 stars"><font size="12">★</font></label>
+
+                    <input type="radio" id="star1" name="rating" value="1" />
+                    <label class="full" for="star1" onclick="rating(1)" title="Sucks big time - 1 star"><font size="12">★</font></label>
+                    <h6 class="mt-5"><b> @ViewBag.food.rate.ToString("n2") / 5 </b></h6>
+                </div>
+               
+            </div>
+            <div class="col-sm-6">
+                <div class="well">
+                    <h4 class="mt-5"><b>$ @ViewBag.food.price</b></h4>
+                    <h6 class="mt-5"><b>Size @ViewBag.food.foodSize.name</b></h6>
+                    @Html.Raw(ViewBag.food.description)
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <button class="btn-brdr-primary plr-25" perfect-scrollbar onclick="order();addorder('@ViewBag.food.foodId');">
+                    <b class="order-text" id="@ViewBag.food.foodId">Order Now</b>
+                </button>
+            </div>
+
+        </div>
+    </div><br>
+
+</body>
+
+<style type="text/css">
+       /**
+    * Để cho đơn giản nhất mình dùng icon star của font awesome.
+    * À mà khoan, ở đây chúng ta chỉ làm tut nhỏ nên thấy import cả 1 library font-awesome có vẻ hơi quá đáng đã vậy còn ngược lại tiêu chí
+    * "HẠN CHẾ TỐI DÙNG THƯ VIỆN NGOÀI" :D chắc các bạn nghĩ thế nhỉ? Hiện tại chúng ta chỉ implement 1 tut nhỏ thì có vẻ thừa,
+    * nhưng trong project mình đang code có sẵn font-awesome nên trên thực tế mình đâu có * thêm gì đâu :D
+    */
+       /*reset css*/
+       div, label {
+           margin: 0;
+           padding: 0;
+       }
+
+       body {
+           margin: 20px;
+       }
+
+       h1 {
+           font-size: 18.25px;
+           margin: 10px;
+       }
+       /****** Style Star Rating Widget *****/
+       #rating {
+           border: none;
+           float: left;
+       }
+
+           #rating > input {
+               display: none;
+           }
+           /*ẩn input radio - vì chúng ta đã có label là GUI*/
+           #rating > label:before {
+               margin: 5px;
+               font-size: 18.25px;
+               display: inline-block;
+           }
+           /*1 ngôi sao*/
+           #rating > .half:before {
+               content: "\f089";
+               position: absolute;
+           }
+           /*0.5 ngôi sao*/
+           #rating > label {
+               color: #ddd;
+               float: right;
+           }
+           /*float:right để lật ngược các ngôi sao lại đúng theo thứ tự trong thực tế*/
+           /*thêm màu cho sao đã chọn và các ngôi sao phía trước*/
+           #rating > input:checked ~ label,
+           #rating:not(:checked) > label:hover,
+           #rating:not(:checked) > label:hover ~ label {
+               color: #FFD700;
+           }
+               /* Hover vào các sao phía trước ngôi sao đã chọn*/
+               #rating > input:checked + label:hover,
+               #rating > input:checked ~ label:hover,
+               #rating > label:hover ~ input:checked ~ label,
+               #rating > input:checked ~ label:hover ~ label {
+                   color: #FFED85;
+               }
+</style>
+<script type="text/javascript">
+    function calcRate(r) {
+        const f = ~~r,//Tương tự Math.floor(r)
+            id = 'star' + f + (r % f ? 'half' : '')
+        id && (document.getElementById(id).checked = !0)
+    }
+    function rating(r) {
+        $.ajax({
+            type: 'GET',
+            url: './rating?rate=' + r + '&id=' + @ViewBag.food.foodId,
+            data: {
+                'foo': 'bar',
+                'ca$libri': 'no$libri' // <-- the $ sign in the parameter name seems unusual, I would avoid it
+            },
+            success: function (msg) {
+                alert("bạn vừa chọn " + r + " sao");
+            }
+        });
+    }
+    function addorder(id) {
+        var e = document.getElementById(id);
+        var bool = checkCookie(e.id);
+        if (bool) {
+            delCookie(e.id);
+            e.innerHTML = "Order Now";
+        } else {
+            setCookie(e.id, e.id);
+            e.innerHTML = "ordered";
+        }
+    }
+
+    function order() {
+        var e = document.getElementsByClassName("order-text");
+        for (let i = 0; i < e.length; i++) {
+            var bool = checkCookie(e[i].id);
+            if (bool) {
+                e[i].innerHTML = "Ordered";
+            } else {
+                e[i].innerHTML = "Order Now";
+            }
+        }
+    }
+    order();
+    calcRate(Math.floor(@ViewBag.food.rate));
+</script>

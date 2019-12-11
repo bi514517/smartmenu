@@ -59,6 +59,7 @@ namespace WebApplication5
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
             }
+            app.UseStaticFiles();
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();

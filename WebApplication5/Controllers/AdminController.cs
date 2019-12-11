@@ -3,9 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using smartmenu.Models;
 using WebApplication5.Models;
@@ -17,6 +21,7 @@ namespace WebApplication5.Controllers
     [ApiController]
     public class AdminController : Controller
     {
+
         [HttpGet]
         public IActionResult Index()
         {
@@ -48,16 +53,30 @@ namespace WebApplication5.Controllers
         [HttpGet, HttpPost]
         public IActionResult createFood()
         {
+
             if (HttpContext.Request.Method == HttpMethod.Post.Method)
             {
-                Database.cnn.Open();
-                string sql = "INSERT INTO Food " +
-                    "(FoodName, Price, Image, Description, FoodTypeId)" +
+                String sql = "";
+                if (string.IsNullOrWhiteSpace(Request.Form["Id"]))
+                {
+                    sql = "INSERT INTO Food " +
+                    "(FoodName, Price, Image, Description, FoodTypeId,SizeId)" +
                     "VALUES ('" + Request.Form["FoodName"] + "', '" + Request.Form["Price"] + "', " +
                     "'" + Request.Form["Image"] + "','" + Request.Form["Description"] + "'," +
-                    "'" + Request.Form["FoodTypeId"] + "')";
+                    "'" + Request.Form["FoodTypeId"] + "','"+ Request.Form["SizeId"] + "')";
+                }
+                else
+                {
+                    sql = "Update Food SET ";
+                    String[] Keys = { "FoodName","Price","Image", "Description", "FoodTypeId", "SizeId" };
+                    foreach (String key in Keys)
+                    {
+                        if(Request.Form[key].ToString().Length > 0)
+                            sql += key +" = '"+ Request.Form[key] + "',";
+                    }
+                    sql = sql.Substring(0,sql.Length -1) + " where Food.Id ='"+ Request.Form["Id"] + "'";
+                }
                 Database.excuteQuery(sql);
-                Database.cnn.Close();
                 return Redirect("~/admin/food-create");
             }
             else
@@ -65,44 +84,61 @@ namespace WebApplication5.Controllers
                 int Id = 1;
                 if (!string.IsNullOrEmpty(Request.Query["id"]) && int.TryParse("123", out Id))
                 {
-                    Database.cnn.Open();
                     string sql1 = "Select Food.Id,Food.FoodName,Food.Price," +
-                        "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName " +
-                        "from Food left join FoodType on Food.FoodTypeId = FoodType.Id " +
+                        "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName, " +
+                        "foodSize.Id as foodSizeId,foodSize.sizeName as foodSizeName " +
+                        "from Food " +
+                        "left join FoodType on Food.FoodTypeId = FoodType.Id " +
+                        "left join foodSize on Food.SizeId = foodSize.Id " +
                         "where Food.Id = '" + Request.Query["id"] + "'";
-                    SqlDataReader dataReader1 = Database.excuteQuery(sql1);
-                    while (dataReader1.Read())
+                    DataTable dataReader1 = Database.excuteQuery(sql1);
+                    foreach (DataRow row in dataReader1.Rows)
                     {
-                        string foodId = dataReader1.GetValue(0).ToString();
-                        string foodName = dataReader1.GetValue(1).ToString();
-                        int price = dataReader1.GetInt32(2);
-                        string image = dataReader1.GetValue(3).ToString();
-                        string description = dataReader1.GetValue(4).ToString();
-                        int foodTypeId = dataReader1.GetInt32(5);
-                        string foodTypeName = dataReader1.GetValue(6).ToString();
+                        string foodId = row["Id"].ToString();
+                        string foodName = row["FoodName"].ToString();
+                        int price = Int32.Parse(row["Price"].ToString());
+                        string image = row["Image"].ToString();
+                        string description = row["Description"].ToString();
+                        int foodTypeId = 0;
+                        Int32.TryParse(row["FoodTypeId"].ToString(),out foodTypeId);
+                        string foodTypeName = row["TypeName"].ToString();
+                        int foodSizeId = 0;
+                        Int32.TryParse(row["foodSizeId"].ToString(),out foodSizeId);
+                        string foodSizeName = row["foodSizeName"].ToString();
                         foodType foodType = new foodType(foodTypeId, foodTypeName);
-                        food food = new food(foodId, foodName, price, image, description, foodType);
+                        foodSize foodSize = new foodSize(foodSizeId, foodSizeName);
+                        food food = new food(foodId, foodName, price, image, description, foodType,foodSize);
                         ViewBag.food = food;
                     }
-                    Database.cnn.Close();
-
                 }
-                Database.cnn.Open();
                 string sql = "select Id,TypeName from foodType";
                 ArrayList foodTypes = new ArrayList();
-                SqlDataReader dataReader = Database.excuteQuery(sql);
-                while (dataReader.Read())
+                DataTable dataReader = Database.excuteQuery(sql);
+                foreach (DataRow row in dataReader.Rows)
                 {
-                    int foodTypeId = dataReader.GetInt32(0);
-                    string foodTypeName = dataReader.GetValue(1).ToString();
+                    int foodTypeId = Int32.Parse(row["Id"].ToString());
+                    string foodTypeName = row["TypeName"].ToString();
                     foodType foodType = new foodType(foodTypeId, foodTypeName);
                     foodTypes.Add(foodType);
                 }
                 ViewBag.foodTypes = foodTypes;
-                Database.cnn.Close();
+                sql = "select Id,sizeName from foodSize";
+                ArrayList foodSizes = new ArrayList();
+                dataReader = Database.excuteQuery(sql);
+                foreach (DataRow row in dataReader.Rows)
+                {
+                    int foodSizeId = Int32.Parse(row["Id"].ToString());
+                    string foodSizeName = row["sizeName"].ToString();
+                    foodSize foodType = new foodSize(foodSizeId, foodSizeName);
+                    foodSizes.Add(foodType);
+                }
+                ViewBag.foodSizes = foodSizes;
                 return PartialView("Views/CoolAdmin-master/createFood.cshtml");
             }
         }
+
+
+
 
 
         [Route("food-delete")]
@@ -112,12 +148,8 @@ namespace WebApplication5.Controllers
             int Id = 1;
             if (!string.IsNullOrEmpty(Request.Query["id"]) && int.TryParse("123", out Id))
             {
-                Database.cnn.Open();
                 Database.excuteQuery("DELETE FROM food_weather WHERE food_weather.FoodId = '" + Request.Query["id"] + "'");
-                Database.cnn.Close();
-                Database.cnn.Open();
                 Database.excuteQuery("DELETE FROM Food WHERE Food.Id = '" + Request.Query["id"] + "'");
-                Database.cnn.Close();
                 return "success";
             }
             return "fail";
@@ -127,28 +159,26 @@ namespace WebApplication5.Controllers
         {
             int amountOfPage = 20;
             int skip = amountOfPage * (page -1);
-            Database.cnn.Open();
             string sql = "Select Food.Id,Food.FoodName,Food.Price," +
                 "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName " +
                 "from Food left join FoodType on Food.FoodTypeId = FoodType.Id " +
                 "ORDER BY Food.Id " +
                 "OFFSET "+skip+" ROWS FETCH NEXT "+amountOfPage+" ROWS ONLY ";
             ArrayList foods = new ArrayList();
-            SqlDataReader dataReader = Database.excuteQuery(sql);
-            while (dataReader.Read())
+            DataTable dataReader = Database.excuteQuery(sql);
+            foreach (DataRow row in dataReader.Rows)
             {
-                string foodId = dataReader.GetValue(0).ToString();
-                string foodName = dataReader.GetValue(1).ToString();
-                int price = dataReader.GetInt32(2);
-                string image = dataReader.GetValue(3).ToString();
-                string description = dataReader.GetValue(4).ToString();
-                int foodTypeId = dataReader.GetInt32(5);
-                string foodTypeName = dataReader.GetValue(6).ToString();
+                string foodId = row["Id"].ToString();
+                string foodName = row["FoodName"].ToString();
+                int price = Int32.Parse(row["Price"].ToString());
+                string image = row["Image"].ToString();
+                string description = row["Description"].ToString();
+                int foodTypeId = Int32.Parse(row["FoodTypeId"].ToString());
+                string foodTypeName = row["TypeName"].ToString();
                 foodType foodType = new foodType(foodTypeId, foodTypeName);
                 food food = new food(foodId, foodName, price, image, description, foodType);
                 foods.Add(food);
             }
-            Database.cnn.Close();
             return foods;
         }
 
@@ -156,28 +186,26 @@ namespace WebApplication5.Controllers
         {
             int amountOfPage = 20;
             int skip = amountOfPage * (page - 1);
-            Database.cnn.Open();
             string sql = "Select Food.Id,Food.FoodName,Food.Price," +
                 "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName " +
                 "from Food left join FoodType on Food.FoodTypeId = FoodType.Id " +
                 "ORDER BY Food.Id " +
                 "OFFSET " + skip + " ROWS FETCH NEXT " + amountOfPage + " ROWS ONLY ";
             ArrayList foods = new ArrayList();
-            SqlDataReader dataReader = Database.excuteQuery(sql);
-            while (dataReader.Read())
+            DataTable dataReader = Database.excuteQuery(sql);
+            foreach(DataRow row in dataReader.Rows)
             {
-                string foodId = dataReader.GetValue(0).ToString();
-                string foodName = dataReader.GetValue(1).ToString();
-                int price = dataReader.GetInt32(2);
-                string image = dataReader.GetValue(3).ToString();
-                string description = dataReader.GetValue(4).ToString();
-                int foodTypeId = dataReader.GetInt32(5);
-                string foodTypeName = dataReader.GetValue(6).ToString();
+                string foodId = row["Id"].ToString();
+                string foodName = row["FoodName"].ToString();
+                int price = Int32.Parse(row["Price"].ToString());
+                string image = row["Image"].ToString();
+                string description = row["Description"].ToString();
+                int foodTypeId = Int32.Parse(row["FoodTypeId"].ToString());
+                string foodTypeName = row["TypeName"].ToString();
                 foodType foodType = new foodType(foodTypeId, foodTypeName);
                 food food = new food(foodId, foodName, price, image, description, foodType);
                 foods.Add(food);
             }
-            Database.cnn.Close();
             return foods;
         }
 
@@ -211,24 +239,21 @@ namespace WebApplication5.Controllers
                 "inner join [table] on [table].[IP] = orders.tableIp " +
                 "where approve IS NULL or approve = 0";
             ArrayList orderList = new ArrayList();
-            Database.cnn.Open();
-            SqlDataReader dataReader = Database.excuteQuery(sql);
-            while (dataReader.Read())
+            DataTable dataReader = Database.excuteQuery(sql);
+            foreach (DataRow row in dataReader.Rows)
             {
-                int orderId = Int32.Parse(dataReader["orderId"].ToString());
-                string tableIp = dataReader["tableIp"].ToString();
-                string tableName = dataReader["tableName"].ToString();
+                int orderId = Int32.Parse(row["orderId"].ToString());
+                string tableIp = row["tableIp"].ToString();
+                string tableName = row["tableName"].ToString();
                 DateTime time = new DateTime();
-                if (!(dataReader["time"] is DBNull))
-                    time = Convert.ToDateTime(dataReader["time"]);
+                if (!(row["time"] is DBNull))
+                    time = Convert.ToDateTime(row["time"]);
                 order order = new order(orderId, new table(tableIp, tableName), time);
                 orderList.Add(order);
             }
-            Database.cnn.Close();
             for (int i = 0;i < orderList.Count;i++)
             {
                 ArrayList orderItemList = new ArrayList();
-                Database.cnn.Open();
                 sql = "select Food.Id,Food.FoodName,Food.Price, " +
                 "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName, " +
                 "orderItem.amount from orderItem " +
@@ -237,22 +262,21 @@ namespace WebApplication5.Controllers
                 "where orderId = '" + ((order)orderList[i]).id + "' " +
                 "ORDER BY Food.Id ";
                 dataReader = Database.excuteQuery(sql);
-                while (dataReader.Read())
+                foreach (DataRow row in dataReader.Rows)
                 {
-                    string foodId = dataReader.GetValue(0).ToString();
-                    string foodName = dataReader.GetValue(1).ToString();
-                    int price = dataReader.GetInt32(2);
-                    string image = dataReader.GetValue(3).ToString();
-                    string description = dataReader.GetValue(4).ToString();
-                    int foodTypeId = dataReader.GetInt32(5);
-                    string foodTypeName = dataReader.GetValue(6).ToString();
-                    int amount = dataReader.GetInt32(7);
+                    string foodId = row["Id"].ToString();
+                    string foodName = row["FoodName"].ToString();
+                    int price = Int32.Parse(row["Price"].ToString());
+                    string image = row["Image"].ToString();
+                    string description = row["Description"].ToString();
+                    int foodTypeId = Int32.Parse(row["FoodTypeId"].ToString());
+                    string foodTypeName = row["TypeName"].ToString();
+                    int amount = Int32.Parse(row["amount"].ToString());
                     foodType foodType = new foodType(foodTypeId, foodTypeName);
                     food food = new food(foodId, foodName, price, image, description, foodType);
                     orderItem orderItem = new orderItem(food, amount);
                     orderItemList.Add(orderItem);
                 }
-                Database.cnn.Close();
                 ((order)orderList[i]).ordered = orderItemList;
             }
             return orderList;
@@ -265,12 +289,8 @@ namespace WebApplication5.Controllers
             int Id = 1;
             if (!string.IsNullOrEmpty(Request.Query["id"]) && int.TryParse("123", out Id))
             {
-                Database.cnn.Open();
                 Database.excuteQuery("DELETE FROM orders WHERE orders.id = '" + Request.Query["id"] + "'");
-                Database.cnn.Close();
-                Database.cnn.Open();
                 Database.excuteQuery("DELETE FROM orderItem WHERE orderItem.orderId = '" + Request.Query["id"] + "'");
-                Database.cnn.Close();
                 return "success";
             }
             return "fail";
@@ -284,9 +304,7 @@ namespace WebApplication5.Controllers
             int Id = 1;
             if (!string.IsNullOrEmpty(Request.Query["id"]) && int.TryParse("123", out Id))
             {
-                Database.cnn.Open();
                 Database.excuteQuery("UPDATE orders SET approve = '1' WHERE orders.id = '" + Request.Query["id"] + "'");
-                Database.cnn.Close();
                 return "success";
             }
             return "fail";
@@ -307,18 +325,16 @@ namespace WebApplication5.Controllers
 
         private ArrayList getTables()
         {
-            Database.cnn.Open();
             string sql = "Select [IP],[name] from [Table] ";
             ArrayList tables = new ArrayList();
-            SqlDataReader dataReader = Database.excuteQuery(sql);
-            while (dataReader.Read())
+            DataTable dataReader = Database.excuteQuery(sql);
+            foreach (DataRow row in dataReader.Rows)
             {
-                string IP = dataReader["IP"].ToString();
-                string name = dataReader["name"].ToString();
+                string IP = row["IP"].ToString();
+                string name = row["name"].ToString();
                 table food = new table(IP,name);
                 tables.Add(food);
             }
-            Database.cnn.Close();
             return tables;
         }
 
@@ -332,14 +348,13 @@ namespace WebApplication5.Controllers
                 if (!string.IsNullOrEmpty(Request.Query["name"]))
                 {
                     String name = Request.Query["name"];
-                    Database.cnn.Open();
                     string sql = "select * from [table] where [IP] ='" + ip + "'";
-                    SqlDataReader sqlData = Database.excuteQuery(sql);
-                    
-                    if (sqlData.HasRows)
+                    DataTable dataReader = Database.excuteQuery(sql);
+
+                    if (dataReader.Rows.Count > 0)
                     {
                         sql = "UPDATE [table] SET " +
-                            "[IP]='" + ip + "',[name]='" + name + "'";
+                            "[name]='" + name + "' where [IP]='" + ip + "'";
                     }
                     else
                     {
@@ -347,10 +362,7 @@ namespace WebApplication5.Controllers
                             "([IP],[name])" +
                             "VALUES ('" + ip + "','" + name + "')";
                     }
-                    Database.cnn.Close();
-                    Database.cnn.Open();
                     Database.excuteQuery(sql);
-                    Database.cnn.Close();
                 }
                 return "success";
             }

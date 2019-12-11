@@ -104,7 +104,7 @@
         <div class="row">
             @foreach (var food in ViewBag.foods)
             {
-                <div class="col-md-6 food-menu @food.foodType.name">
+                <div class="col-md-6 food-menu @food.foodType.name" onclick="window.location.href = './detail?id=@food.foodId';">
                     <div class="sided-90x mb-30 ">
                         <div class="s-left"><img class="br-3" src="@food.image" alt="Menu Image"></div><!--s-left-->
                         <div class="s-right">

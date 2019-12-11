@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
@@ -8,6 +9,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
+using smartmenu.Models;
 using WebApplication5.Models;
 
 namespace WebApplication5.Controllers
@@ -204,6 +206,62 @@ namespace WebApplication5.Controllers
             return PartialView("Views/luigis/CreateFood.cshtml");
         }
 
+
+        [Route("detail")]
+        [HttpGet]
+        public IActionResult detailFood()
+        {
+            int Id = 1;
+            if (!string.IsNullOrEmpty(Request.Query["id"]) && int.TryParse(Request.Query["id"], out Id))
+            {
+                ArrayList orderItemList = new ArrayList();
+                String sql = "select Food.Id,Food.FoodName,Food.Price, " +
+                "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName, " +
+                "foodSize.sizeName,foodSize.id as foodSizeId,Rating from Food " +
+                "left join foodType on [Food].[FoodTypeId] = [foodType].[Id] " +
+                "left join foodSize on [Food].[SizeId] = [foodSize].[Id] " +
+                "where food.Id = " + Id;
+                DataTable dataReader = Database.excuteQuery(sql);
+                if (dataReader.Rows.Count <= 0) return NotFound();
+                else
+                {
+                    DataRow row = dataReader.Rows[0];
+                    string foodId = row["Id"].ToString();
+                    string foodName = row["FoodName"].ToString();
+                    int price; Int32.TryParse(row["Price"].ToString(),out price);
+                    string image = row["Image"].ToString();
+                    string description = row["Description"].ToString();
+                    int foodTypeId; Int32.TryParse(row["FoodTypeId"].ToString(),out foodTypeId);
+                    string foodTypeName = row["TypeName"].ToString();
+                    int foodSizeId; Int32.TryParse(row["foodSizeId"].ToString(), out foodSizeId);
+                    string sizeName = row["sizeName"].ToString();
+                    float Rating; float.TryParse(row["Rating"].ToString(),out Rating);
+                    foodSize foodsize = new foodSize(foodSizeId,sizeName);
+                    foodType foodType = new foodType(foodTypeId, foodTypeName);
+                    food food = new food(foodId, foodName, price, image, description, foodType,foodsize,Rating);
+                    ViewBag.food = food;
+                }
+                return PartialView("Views/luigis/detail.cshtml");
+            }
+            else return NotFound();
+        }
+
+        [Route("rating")]
+        [HttpGet]
+        public string ratingFood()
+        {
+            int Id = 1,rate=1;
+            if (!string.IsNullOrEmpty(Request.Query["id"]) && int.TryParse(Request.Query["id"], out Id)
+                && !string.IsNullOrEmpty(Request.Query["rate"]) && int.TryParse(Request.Query["rate"], out rate))
+            {
+                ArrayList orderItemList = new ArrayList();
+                String sql = " UPDATE Food SET Rating = (Rating*Reviews +"+rate+ ")/(Reviews+1),Reviews = Reviews + 1  WHERE Food.Id = " + Id + " ; ";
+                DataTable dataReader = Database.excuteQuery(sql);
+                return "success";
+            }
+            else return "fails";
+        }
+
         [Route("ordered")]
         [HttpGet]
         public IActionResult ordered()
@@ -258,29 +316,31 @@ namespace WebApplication5.Controllers
         public String postOrdered()
         {
             var ip = Request.HttpContext.Connection.RemoteIpAddress;
-            String sql = "INSERT INTO [orders] (tableIp) VALUES ('"+ip+ "') ;SELECT SCOPE_IDENTITY();";
-            Database.cnn.Open();
-            int orderId = Database.executeScalar(sql);
-            Database.cnn.Close();
-            sql = "INSERT INTO [orderItem] (orderId,foodId,amount) VALUES ";
-            int count = 0;
-            foreach(String key in Request.Form.Keys)
+            String sql = "select * from [Table] where [IP] = '"+ip+"'";
+            DataTable dataTable = Database.excuteQuery(sql);
+            if (dataTable.Rows.Count > 0)
             {
-                count++;
-                sql += "('"+ orderId + "','"+key+"','"+Request.Form[key]+"')";
-            }
-            if (count > 0)
-            {
+                sql = "INSERT INTO [orders] (tableIp) VALUES ('" + ip + "') ;SELECT SCOPE_IDENTITY();";
+                int orderId = Database.executeScalar(sql);
+                sql = "INSERT INTO [orderItem] (orderId,foodId,amount) VALUES ";
+                int count = 0;
                 foreach (String key in Request.Form.Keys)
                 {
-                    Response.Cookies.Delete(key);
+                    count++;
+                    sql += "('" + orderId + "','" + key + "','" + Request.Form[key] + "')";
                 }
-                Database.cnn.Open();
-                Database.excuteQuery(sql);
-                Database.cnn.Close();
-                return "success";
+                if (count > 0)
+                {
+                    foreach (String key in Request.Form.Keys)
+                    {
+                        Response.Cookies.Delete(key);
+                    }
+                    Database.excuteQuery(sql);
+                    return "success";
+                }
+                else return "fail";
             }
-            else return "fail";
+            else return "this device has not been registered";
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
