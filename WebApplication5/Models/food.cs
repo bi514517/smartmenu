@@ -14,6 +14,11 @@ namespace WebApplication5.Models
         public foodSize foodSize;
         public float rate;
 
+        public food(string foodId)
+        {
+            this.foodId = foodId;
+        }
+
         public food(string foodId, string foodName, int price, string image, string description, foodType foodType)
         {
             this.foodId = foodId;

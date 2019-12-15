@@ -28,13 +28,14 @@ namespace smartmenu.Models
         }
         public class orderItem
         {
-            food food;
-            int amount;
-
-            public orderItem(food food, int amount)
+            public food food;
+            public int amount;
+            public int weatherCode;
+            public orderItem(food food, int amount,int weatherCode)
             {
                 this.food = food;
                 this.amount = amount;
+                this.weatherCode = weatherCode;
             }
         }
     }

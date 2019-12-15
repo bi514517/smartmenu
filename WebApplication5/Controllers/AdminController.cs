@@ -256,7 +256,7 @@ namespace WebApplication5.Controllers
                 ArrayList orderItemList = new ArrayList();
                 sql = "select Food.Id,Food.FoodName,Food.Price, " +
                 "Food.Image,Food.Description,Food.FoodTypeId,FoodType.TypeName, " +
-                "orderItem.amount from orderItem " +
+                "orderItem.amount ,orderItem.weatherId from orderItem " +
                 "left join Food on Food.Id = orderItem.foodId  " +
                 "left join foodType on [Food].[FoodTypeId] = [foodType].[Id]  " +
                 "where orderId = '" + ((order)orderList[i]).id + "' " +
@@ -266,15 +266,16 @@ namespace WebApplication5.Controllers
                 {
                     string foodId = row["Id"].ToString();
                     string foodName = row["FoodName"].ToString();
-                    int price = Int32.Parse(row["Price"].ToString());
+                    int price = 0; Int32.TryParse(row["Price"].ToString(),out price);
                     string image = row["Image"].ToString();
                     string description = row["Description"].ToString();
-                    int foodTypeId = Int32.Parse(row["FoodTypeId"].ToString());
+                    int foodTypeId = 0; Int32.TryParse(row["FoodTypeId"].ToString(),out foodTypeId);
                     string foodTypeName = row["TypeName"].ToString();
-                    int amount = Int32.Parse(row["amount"].ToString());
+                    int amount = 0; Int32.TryParse(row["amount"].ToString(),out amount);
+                    int weatherId = 0; Int32.TryParse(row["weatherId"].ToString(),out weatherId);
                     foodType foodType = new foodType(foodTypeId, foodTypeName);
                     food food = new food(foodId, foodName, price, image, description, foodType);
-                    orderItem orderItem = new orderItem(food, amount);
+                    orderItem orderItem = new orderItem(food, amount, weatherId);
                     orderItemList.Add(orderItem);
                 }
                 ((order)orderList[i]).ordered = orderItemList;

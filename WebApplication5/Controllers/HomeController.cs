@@ -264,7 +264,7 @@ namespace WebApplication5.Controllers
 
         [Route("ordered")]
         [HttpGet]
-        public IActionResult ordered()
+        public ActionResult ordered()
         {
             cnn.Open();
             string sql = "Select Food.Id,Food.FoodName,Food.Price," +
@@ -313,8 +313,9 @@ namespace WebApplication5.Controllers
 
         [Route("ordered")]
         [HttpPost]
-        public String postOrdered()
+        public async Task<String> postOrdered()
         {
+            weather weather = await GetWeatherAsync();
             var ip = Request.HttpContext.Connection.RemoteIpAddress;
             String sql = "select * from [Table] where [IP] = '"+ip+"'";
             DataTable dataTable = Database.excuteQuery(sql);
@@ -322,12 +323,12 @@ namespace WebApplication5.Controllers
             {
                 sql = "INSERT INTO [orders] (tableIp) VALUES ('" + ip + "') ;SELECT SCOPE_IDENTITY();";
                 int orderId = Database.executeScalar(sql);
-                sql = "INSERT INTO [orderItem] (orderId,foodId,amount) VALUES ";
+                sql = "INSERT INTO [orderItem] (orderId,foodId,amount,weatherId) VALUES ";
                 int count = 0;
                 foreach (String key in Request.Form.Keys)
                 {
                     count++;
-                    sql += "('" + orderId + "','" + key + "','" + Request.Form[key] + "')";
+                    sql += "('" + orderId + "','" + key + "','" + Request.Form[key] + "','" + weather.id + "')";
                 }
                 if (count > 0)
                 {
